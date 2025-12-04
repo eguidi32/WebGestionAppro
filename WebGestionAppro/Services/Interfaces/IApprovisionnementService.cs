@@ -1,6 +1,6 @@
 using WebGestionAppro.Models;
 
-namespace WebGestionAppro.Services
+namespace WebGestionAppro.Services.Interfaces
 {
     public interface IApprovisionnementService
     {

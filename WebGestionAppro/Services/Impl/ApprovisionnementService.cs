@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using WebGestionAppro.Data;
 using WebGestionAppro.Models;
+using WebGestionAppro.Services.Interfaces;
 
 namespace WebGestionAppro.Services.Impl
 {

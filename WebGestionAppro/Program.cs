@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using WebGestionAppro.Data;
-using WebGestionAppro.Services;
+using WebGestionAppro.Services.Interfaces;
 using WebGestionAppro.Services.Impl;
 
 var builder = WebApplication.CreateBuilder(args);

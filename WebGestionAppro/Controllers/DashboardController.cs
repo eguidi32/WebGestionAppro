@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using WebGestionAppro.Models.ViewModels;
-using WebGestionAppro.Services;
+using WebGestionAppro.ViewModels;
+using WebGestionAppro.Services.Interfaces;
 
 namespace WebGestionAppro.Controllers
 {

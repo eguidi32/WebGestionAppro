@@ -1,4 +1,6 @@
-namespace WebGestionAppro.Models.ViewModels
+using WebGestionAppro.Models;
+
+namespace WebGestionAppro.ViewModels
 {
     public class DashboardViewModel
     {
