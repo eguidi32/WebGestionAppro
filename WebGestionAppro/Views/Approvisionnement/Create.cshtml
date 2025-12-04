@@ -1,0 +1,310 @@
+@model WebGestionAppro.Models.ViewModels.ApprovisionnementCreateViewModel
+
+@{
+    ViewData["Title"] = "Nouvel approvisionnement";
+}
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h2>Nouvel approvisionnement</h2>
+        </div>
+        <div class="col-md-6 text-end">
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Retour à la liste
+            </a>
+        </div>
+    </div>
+
+    <form asp-action="Create" method="post" id="approForm">
+        <div class="row">
+            <!-- Section Informations générales -->
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">Informations générales</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Date d'approvisionnement</label>
+                            <input type="date" class="form-control" asp-for="DateApprovisionnement" required>
+                            <span asp-validation-for="DateApprovisionnement" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Fournisseur</label>
+                            <select class="form-select" asp-for="FournisseurId" required>
+                                <option value="">Sélectionner un fournisseur</option>
+                                @foreach (var fournisseur in Model.Fournisseurs)
+                                {
+                                    <option value="@fournisseur.Id">@fournisseur.Nom</option>
+                                }
+                            </select>
+                            <span asp-validation-for="FournisseurId" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Référence</label>
+                            <input type="text" class="form-control" asp-for="Reference" 
+                                   placeholder="Référence de l'approvisionnement (optionnel)">
+                            <small class="form-text text-muted">Laissez vide pour génération automatique</small>
+                            <span asp-validation-for="Reference" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Observations</label>
+                            <textarea class="form-control" asp-for="Observations" rows="4" 
+                                      placeholder="Observations ou commentaires sur cet approvisionnement"></textarea>
+                            <span asp-validation-for="Observations" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section Détails de l'approvisionnement -->
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">Détails de l'approvisionnement</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Article</label>
+                            <select class="form-select" id="articleSelect">
+                                <option value="">Sélectionner un article</option>
+                                @foreach (var article in Model.ArticlesDisponibles)
+                                {
+                                    <option value="@article.Id" 
+                                            data-prix="@article.PrixUnitaire" 
+                                            data-nom="@article.Nom"
+                                            data-unite="@article.Unite">
+                                        @article.Nom
+                                    </option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Quantité</label>
+                                <input type="number" class="form-control" id="quantiteInput" min="1" value="1">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Prix unitaire (FCFA)</label>
+                                <input type="number" class="form-control" id="prixInput" min="0" step="0.01">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Montant total (FCFA)</label>
+                            <input type="text" class="form-control" id="montantDisplay" readonly>
+                        </div>
+
+                        <button type="button" class="btn btn-outline-primary w-100" id="ajouterArticleBtn">
+                            <i class="bi bi-plus-circle"></i> Ajouter un autre article
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Articles ajoutés -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">Articles ajoutés</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered" id="articlesTable">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Article</th>
+                                        <th class="text-center">Quantité</th>
+                                        <th class="text-end">Prix unitaire</th>
+                                        <th class="text-end">Montant</th>
+                                        <th class="text-center">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="articlesTableBody">
+                                    <tr id="noArticlesRow">
+                                        <td colspan="5" class="text-center text-muted">
+                                            Aucun article ajouté
+                                        </td>
+                                    </tr>
+                                </tbody>
+                                <tfoot class="table-light">
+                                    <tr>
+                                        <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                                        <td class="text-end"><strong id="totalGeneral">0 FCFA</strong></td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hidden inputs pour les articles -->
+        <div id="hiddenArticles"></div>
+
+        <!-- Boutons d'action -->
+        <div class="row">
+            <div class="col-12 text-end">
+                <a asp-action="Index" class="btn btn-secondary">Annuler</a>
+                <button type="submit" class="btn btn-primary" id="submitBtn">
+                    <i class="bi bi-save"></i> Enregistrer l'approvisionnement
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        let articles = [];
+        let articleCounter = 0;
+
+        // Calculer le montant
+        function calculerMontant() {
+            const quantite = parseFloat(document.getElementById('quantiteInput').value) || 0;
+            const prix = parseFloat(document.getElementById('prixInput').value) || 0;
+            const montant = quantite * prix;
+            document.getElementById('montantDisplay').value = montant.toLocaleString('fr-FR') + ' FCFA';
+            return montant;
+        }
+
+        // Mettre à jour le prix quand on sélectionne un article
+        document.getElementById('articleSelect').addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const prix = selectedOption.dataset.prix;
+            if (prix) {
+                document.getElementById('prixInput').value = prix;
+                calculerMontant();
+            }
+        });
+
+        // Calculer quand quantité ou prix change
+        document.getElementById('quantiteInput').addEventListener('input', calculerMontant);
+        document.getElementById('prixInput').addEventListener('input', calculerMontant);
+
+        // Ajouter un article
+        document.getElementById('ajouterArticleBtn').addEventListener('click', function() {
+            const articleSelect = document.getElementById('articleSelect');
+            const articleId = articleSelect.value;
+            const articleNom = articleSelect.options[articleSelect.selectedIndex].text;
+            const quantite = parseInt(document.getElementById('quantiteInput').value);
+            const prix = parseFloat(document.getElementById('prixInput').value);
+
+            if (!articleId) {
+                alert('Veuillez sélectionner un article');
+                return;
+            }
+
+            if (!quantite || quantite <= 0) {
+                alert('Veuillez entrer une quantité valide');
+                return;
+            }
+
+            if (!prix || prix < 0) {
+                alert('Veuillez entrer un prix valide');
+                return;
+            }
+
+            const montant = quantite * prix;
+
+            // Ajouter à la liste
+            articles.push({
+                id: articleCounter,
+                articleId: articleId,
+                articleNom: articleNom,
+                quantite: quantite,
+                prixUnitaire: prix,
+                montant: montant
+            });
+
+            afficherArticles();
+            articleCounter++;
+
+            // Réinitialiser le formulaire
+            document.getElementById('articleSelect').value = '';
+            document.getElementById('quantiteInput').value = 1;
+            document.getElementById('prixInput').value = '';
+            document.getElementById('montantDisplay').value = '';
+        });
+
+        // Afficher les articles
+        function afficherArticles() {
+            const tbody = document.getElementById('articlesTableBody');
+            
+            if (articles.length === 0) {
+                tbody.innerHTML = '<tr id="noArticlesRow"><td colspan="5" class="text-center text-muted">Aucun article ajouté</td></tr>';
+                document.getElementById('totalGeneral').textContent = '0 FCFA';
+                return;
+            }
+
+            let html = '';
+            let total = 0;
+
+            articles.forEach(article => {
+                html += `
+                    <tr>
+                        <td>${article.articleNom}</td>
+                        <td class="text-center">${article.quantite}</td>
+                        <td class="text-end">${article.prixUnitaire.toLocaleString('fr-FR')} FCFA</td>
+                        <td class="text-end">${article.montant.toLocaleString('fr-FR')} FCFA</td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="supprimerArticle(${article.id})">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                total += article.montant;
+            });
+
+            tbody.innerHTML = html;
+            document.getElementById('totalGeneral').textContent = total.toLocaleString('fr-FR') + ' FCFA';
+
+            // Mettre à jour les champs cachés
+            updateHiddenInputs();
+        }
+
+        // Supprimer un article
+        function supprimerArticle(id) {
+            articles = articles.filter(a => a.id !== id);
+            afficherArticles();
+        }
+
+        // Mettre à jour les inputs cachés pour la soumission
+        function updateHiddenInputs() {
+            const container = document.getElementById('hiddenArticles');
+            container.innerHTML = '';
+
+            articles.forEach((article, index) => {
+                container.innerHTML += `
+                    <input type="hidden" name="Articles[${index}].ArticleId" value="${article.articleId}" />
+                    <input type="hidden" name="Articles[${index}].ArticleNom" value="${article.articleNom}" />
+                    <input type="hidden" name="Articles[${index}].Quantite" value="${article.quantite}" />
+                    <input type="hidden" name="Articles[${index}].PrixUnitaire" value="${article.prixUnitaire}" />
+                    <input type="hidden" name="Articles[${index}].Montant" value="${article.montant}" />
+                `;
+            });
+        }
+
+        // Validation avant soumission
+        document.getElementById('approForm').addEventListener('submit', function(e) {
+            if (articles.length === 0) {
+                e.preventDefault();
+                alert('Veuillez ajouter au moins un article à l\'approvisionnement');
+                return false;
+            }
+            return true;
+        });
+    </script>
+}

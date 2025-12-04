@@ -1,0 +1,218 @@
+@model WebGestionAppro.Models.ViewModels.ApprovisionnementListViewModel
+
+@{
+    ViewData["Title"] = "Gestion des Approvisionnements";
+}
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h2>Gestion des Approvisionnements</h2>
+        </div>
+        <div class="col-md-6 text-end">
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Nouvel approvisionnement
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Filtres et recherche -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">Filtres et recherche</h5>
+        </div>
+        <div class="card-body">
+            <form asp-action="Index" method="get">
+                <div class="row g-3 align-items-end">
+                    <!-- Ligne 1 -->
+                    <div class="col-md-3">
+                        <label class="form-label">Rechercher...</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" placeholder="Rechercher..." id="searchBox">
+                            <span class="input-group-text bg-white">
+                                <i class="bi bi-search"></i>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Tous les fournisseurs</label>
+                        <select class="form-select" name="fournisseurId">
+                            <option value="">Tous les fournisseurs</option>
+                            @if (Model.Fournisseurs != null)
+                            {
+                                @foreach (var fournisseur in Model.Fournisseurs)
+                                {
+                                    <option value="@fournisseur.Id" selected="@(Model.FournisseurId == fournisseur.Id)">
+                                        @fournisseur.Nom
+                                    </option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Tous les articles</label>
+                        <select class="form-select" name="articleId">
+                            <option value="">Tous les articles</option>
+                            @if (Model.Articles != null)
+                            {
+                                @foreach (var article in Model.Articles)
+                                {
+                                    <option value="@article.Id" selected="@(Model.ArticleId == article.Id)">
+                                        @article.Nom
+                                    </option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-funnel-fill"></i> Filtrer
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Ligne 2 -->
+                <div class="row g-3 align-items-end mt-2">
+                    <div class="col-md-2">
+                        <label class="form-label">Du</label>
+                        <input type="date" class="form-control" name="dateDebut" id="dateDebut" value="@(Model.DateDebut?.ToString("yyyy-MM-dd"))">
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="form-label">Au</label>
+                        <input type="date" class="form-control" name="dateFin" id="dateFin" value="@(Model.DateFin?.ToString("yyyy-MM-dd"))">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Date (récent → ancien)</label>
+                        <select class="form-select" id="sortOrder">
+                            <option value="desc">Date (récent → ancien)</option>
+                            <option value="asc">Date (ancien → récent)</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-5">
+                        <a asp-action="Index" class="btn btn-outline-secondary w-100">
+                            <i class="bi bi-arrow-counterclockwise"></i> Réinitialiser
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Liste des approvisionnements -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            @if (Model.Approvisionnements != null && Model.Approvisionnements.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover" id="approvisionnementsTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Référence</th>
+                                <th>Date</th>
+                                <th>Fournisseur</th>
+                                <th>Articles</th>
+                                <th class="text-end">Montant total</th>
+                                <th>Statut</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var appro in Model.Approvisionnements)
+                            {
+                                <tr>
+                                    <td><strong>@appro.Reference</strong></td>
+                                    <td>@appro.DateApprovisionnement.ToString("dd/MM/yyyy")</td>
+                                    <td>@appro.Fournisseur?.Nom</td>
+                                    <td>
+                                        <span class="badge bg-info">
+                                            @appro.ApprovisionnementArticles.Count article(s)
+                                        </span>
+                                    </td>
+                                    <td class="text-end"><strong>@appro.MontantTotal.ToString("N0") FCFA</strong></td>
+                                    <td>
+                                        @switch (appro.Statut)
+                                        {
+                                            case WebGestionAppro.Models.StatutApprovisionnement.Recu:
+                                                <span class="badge bg-success">Reçu</span>
+                                                break;
+                                            case WebGestionAppro.Models.StatutApprovisionnement.EnAttente:
+                                                <span class="badge bg-warning text-dark">En attente</span>
+                                                break;
+                                            case WebGestionAppro.Models.StatutApprovisionnement.Annule:
+                                                <span class="badge bg-danger">Annulé</span>
+                                                break;
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group" role="group">
+                                            <a asp-action="Details" asp-route-id="@appro.Id" 
+                                               class="btn btn-sm btn-outline-primary" title="Voir">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <a asp-action="Create" asp-route-id="@appro.Id" 
+                                               class="btn btn-sm btn-outline-warning" title="Modifier">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <a asp-action="Delete" asp-route-id="@appro.Id" 
+                                               class="btn btn-sm btn-outline-danger" title="Supprimer">
+                                                <i class="bi bi-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-light">
+                                <td colspan="4" class="text-end"><strong>Total:</strong></td>
+                                <td class="text-end">
+                                    <strong>@Model.Approvisionnements.Sum(a => a.MontantTotal).ToString("N0") FCFA</strong>
+                                </td>
+                                <td colspan="2"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <!-- La pagination peut être ajoutée ici si nécessaire -->
+            }
+            else
+            {
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    Aucun approvisionnement trouvé. 
+                    <a asp-action="Create" class="alert-link">Créer un nouvel approvisionnement</a>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Recherche en temps réel
+        document.getElementById('searchBox').addEventListener('keyup', function() {
+            var searchValue = this.value.toLowerCase();
+            var tableRows = document.querySelectorAll('#approvisionnementsTable tbody tr');
+            
+            tableRows.forEach(function(row) {
+                var text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchValue) ? '' : 'none';
+            });
+        });
+    </script>
+}

@@ -1,0 +1,179 @@
+@model WebGestionAppro.Models.ViewModels.DashboardViewModel
+
+@{
+    ViewData["Title"] = "Dashboard - Gestion des Approvisionnements";
+}
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="mb-3">Dashboard</h2>
+            <p class="text-muted">Période: <strong>@Model.Periode</strong></p>
+        </div>
+    </div>
+
+    <!-- Cartes de statistiques -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">Total des approvisionnements</h6>
+                    <h3 class="card-title text-primary mb-0">@Model.MontantTotal.ToString("N0") FCFA</h3>
+                    <small class="text-muted">Période: @Model.Periode</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">Nombre d'approvisionnements</h6>
+                    <h3 class="card-title text-success mb-0">@Model.NombreApprovisionnements</h3>
+                    <small class="text-muted">Période: @Model.Periode</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">Fournisseur principal</h6>
+                    <h5 class="card-title text-info mb-1">@Model.FournisseurPrincipalNom</h5>
+                    <p class="mb-0">
+                        <strong>@Model.FournisseurPrincipalMontant.ToString("N0") FCFA</strong>
+                        <span class="badge bg-info ms-2">@Model.FournisseurPrincipalPourcentage.ToString("F1")%</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques par fournisseur -->
+    @if (Model.StatistiquesParFournisseur.Any())
+    {
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">Répartition par fournisseur</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Fournisseur</th>
+                                        <th class="text-end">Montant</th>
+                                        <th class="text-end">Pourcentage</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var stat in Model.StatistiquesParFournisseur.OrderByDescending(s => s.Value))
+                                    {
+                                        var pourcentage = Model.MontantTotal > 0 ? (stat.Value / Model.MontantTotal) * 100 : 0;
+                                        <tr>
+                                            <td>@stat.Key</td>
+                                            <td class="text-end"><strong>@stat.Value.ToString("N0") FCFA</strong></td>
+                                            <td class="text-end">
+                                                <div class="progress" style="height: 20px;">
+                                                    <div class="progress-bar bg-primary" role="progressbar" 
+                                                         style="width: @pourcentage%" 
+                                                         aria-valuenow="@pourcentage" aria-valuemin="0" aria-valuemax="100">
+                                                        @pourcentage.ToString("F1")%
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Derniers approvisionnements -->
+    @if (Model.DerniersApprovisionnements.Any())
+    {
+        <div class="row">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Derniers approvisionnements</h5>
+                        <a asp-controller="Approvisionnement" asp-action="Index" class="btn btn-sm btn-outline-primary">
+                            Voir tout
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Référence</th>
+                                        <th>Date</th>
+                                        <th>Fournisseur</th>
+                                        <th>Articles</th>
+                                        <th class="text-end">Montant total</th>
+                                        <th>Statut</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var appro in Model.DerniersApprovisionnements)
+                                    {
+                                        <tr>
+                                            <td><strong>@appro.Reference</strong></td>
+                                            <td>@appro.DateApprovisionnement.ToString("dd/MM/yyyy")</td>
+                                            <td>@appro.Fournisseur?.Nom</td>
+                                            <td>
+                                                <span class="badge bg-info">
+                                                    @appro.ApprovisionnementArticles.Count article(s)
+                                                </span>
+                                            </td>
+                                            <td class="text-end"><strong>@appro.MontantTotal.ToString("N0") FCFA</strong></td>
+                                            <td>
+                                                @switch (appro.Statut)
+                                                {
+                                                    case WebGestionAppro.Models.StatutApprovisionnement.Recu:
+                                                        <span class="badge bg-success">Reçu</span>
+                                                        break;
+                                                    case WebGestionAppro.Models.StatutApprovisionnement.EnAttente:
+                                                        <span class="badge bg-warning">En attente</span>
+                                                        break;
+                                                    case WebGestionAppro.Models.StatutApprovisionnement.Annule:
+                                                        <span class="badge bg-danger">Annulé</span>
+                                                        break;
+                                                }
+                                            </td>
+                                            <td>
+                                                <a asp-controller="Approvisionnement" asp-action="Details" asp-route-id="@appro.Id" 
+                                                   class="btn btn-sm btn-outline-primary" title="Voir les détails">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            Aucun approvisionnement pour le moment. 
+            <a asp-controller="Approvisionnement" asp-action="Create" class="alert-link">Créer un nouvel approvisionnement</a>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        // Vous pouvez ajouter des graphiques Chart.js ici si nécessaire
+    </script>
+}

@@ -1,0 +1,137 @@
+@model WebGestionAppro.Models.Approvisionnement
+
+@{
+    ViewData["Title"] = "Supprimer l'approvisionnement";
+}
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="text-danger">Supprimer l'approvisionnement</h2>
+            <p class="text-muted">Êtes-vous sûr de vouloir supprimer cet approvisionnement ?</p>
+        </div>
+    </div>
+
+    <div class="alert alert-danger">
+        <i class="bi bi-exclamation-triangle"></i>
+        <strong>Attention !</strong> Cette action est irréversible. Toutes les données associées à cet approvisionnement seront supprimées.
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">Informations de l'approvisionnement</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tbody>
+                            <tr>
+                                <td class="text-muted" style="width: 50%;">Référence:</td>
+                                <td><strong>@Model.Reference</strong></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Date d'approvisionnement:</td>
+                                <td><strong>@Model.DateApprovisionnement.ToString("dd/MM/yyyy")</strong></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Fournisseur:</td>
+                                <td><strong>@Model.Fournisseur?.Nom</strong></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Nombre d'articles:</td>
+                                <td><strong>@Model.ApprovisionnementArticles.Count</strong></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Montant total:</td>
+                                <td><strong class="text-danger">@Model.MontantTotal.ToString("N0") FCFA</strong></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Statut:</td>
+                                <td>
+                                    @switch (Model.Statut)
+                                    {
+                                        case WebGestionAppro.Models.StatutApprovisionnement.Recu:
+                                            <span class="badge bg-success">Reçu</span>
+                                            break;
+                                        case WebGestionAppro.Models.StatutApprovisionnement.EnAttente:
+                                            <span class="badge bg-warning text-dark">En attente</span>
+                                            break;
+                                        case WebGestionAppro.Models.StatutApprovisionnement.Annule:
+                                            <span class="badge bg-danger">Annulé</span>
+                                            break;
+                                    }
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    @if (!string.IsNullOrEmpty(Model.Observations))
+                    {
+                        <div class="mt-3">
+                            <h6 class="text-muted">Observations:</h6>
+                            <p class="border-start border-3 border-danger ps-3">@Model.Observations</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">Articles concernés</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Article</th>
+                                    <th class="text-center">Quantité</th>
+                                    <th class="text-end">Montant</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.ApprovisionnementArticles)
+                                {
+                                    <tr>
+                                        <td>@item.Article?.Nom</td>
+                                        <td class="text-center">@item.Quantite</td>
+                                        <td class="text-end">@item.Montant.ToString("N0") FCFA</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <form asp-action="Delete" method="post">
+        <input type="hidden" asp-for="Id" />
+        <div class="row">
+            <div class="col-12 text-end">
+                <a asp-action="Index" class="btn btn-secondary btn-lg">
+                    <i class="bi bi-x-circle"></i> Annuler
+                </a>
+                <button type="submit" class="btn btn-danger btn-lg">
+                    <i class="bi bi-trash"></i> Confirmer la suppression
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        // Confirmation avant suppression
+        document.querySelector('form').addEventListener('submit', function(e) {
+            if (!confirm('Êtes-vous absolument sûr de vouloir supprimer cet approvisionnement ?')) {
+                e.preventDefault();
+                return false;
+            }
+        });
+    </script>
+}

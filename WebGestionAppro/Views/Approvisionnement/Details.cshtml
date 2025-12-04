@@ -1,0 +1,220 @@
+@model WebGestionAppro.Models.Approvisionnement
+
+@{
+    ViewData["Title"] = "Détails de l'approvisionnement";
+}
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h2>Détails de l'approvisionnement</h2>
+            <p class="text-muted">Référence: <strong>@Model.Reference</strong></p>
+        </div>
+        <div class="col-md-6 text-end">
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Retour à la liste
+            </a>
+            <a asp-action="Create" asp-route-id="@Model.Id" class="btn btn-warning">
+                <i class="bi bi-pencil"></i> Modifier
+            </a>
+            <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger">
+                <i class="bi bi-trash"></i> Supprimer
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Informations générales -->
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Informations générales</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tbody>
+                            <tr>
+                                <td class="text-muted" style="width: 50%;">Date d'approvisionnement:</td>
+                                <td><strong>@Model.DateApprovisionnement.ToString("dd/MM/yyyy")</strong></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Fournisseur:</td>
+                                <td><strong>@Model.Fournisseur?.Nom</strong></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Référence:</td>
+                                <td><strong>@Model.Reference</strong></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Statut:</td>
+                                <td>
+                                    @switch (Model.Statut)
+                                    {
+                                        case WebGestionAppro.Models.StatutApprovisionnement.Recu:
+                                            <span class="badge bg-success">Reçu</span>
+                                            break;
+                                        case WebGestionAppro.Models.StatutApprovisionnement.EnAttente:
+                                            <span class="badge bg-warning text-dark">En attente</span>
+                                            break;
+                                        case WebGestionAppro.Models.StatutApprovisionnement.Annule:
+                                            <span class="badge bg-danger">Annulé</span>
+                                            break;
+                                    }
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Date de création:</td>
+                                <td>@Model.DateCreation.ToString("dd/MM/yyyy HH:mm")</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    @if (!string.IsNullOrEmpty(Model.Observations))
+                    {
+                        <div class="mt-3">
+                            <h6 class="text-muted">Observations:</h6>
+                            <p class="border-start border-3 border-primary ps-3">@Model.Observations</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Informations fournisseur -->
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Informations fournisseur</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tbody>
+                            <tr>
+                                <td class="text-muted" style="width: 40%;">Nom:</td>
+                                <td><strong>@Model.Fournisseur?.Nom</strong></td>
+                            </tr>
+                            @if (!string.IsNullOrEmpty(Model.Fournisseur?.Adresse))
+                            {
+                                <tr>
+                                    <td class="text-muted">Adresse:</td>
+                                    <td>@Model.Fournisseur?.Adresse</td>
+                                </tr>
+                            }
+                            @if (!string.IsNullOrEmpty(Model.Fournisseur?.Telephone))
+                            {
+                                <tr>
+                                    <td class="text-muted">Téléphone:</td>
+                                    <td>
+                                        <a href="tel:@Model.Fournisseur?.Telephone">@Model.Fournisseur?.Telephone</a>
+                                    </td>
+                                </tr>
+                            }
+                            @if (!string.IsNullOrEmpty(Model.Fournisseur?.Email))
+                            {
+                                <tr>
+                                    <td class="text-muted">Email:</td>
+                                    <td>
+                                        <a href="mailto:@Model.Fournisseur?.Email">@Model.Fournisseur?.Email</a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Articles de l'approvisionnement -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Articles de l'approvisionnement</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Article</th>
+                                    <th class="text-center">Quantité</th>
+                                    <th class="text-end">Prix unitaire</th>
+                                    <th class="text-end">Montant</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.ApprovisionnementArticles)
+                                {
+                                    <tr>
+                                        <td>
+                                            <strong>@item.Article?.Nom</strong>
+                                            @if (!string.IsNullOrEmpty(item.Article?.Description))
+                                            {
+                                                <br />
+                                                <small class="text-muted">@item.Article?.Description</small>
+                                            }
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-info">@item.Quantite @item.Article?.Unite</span>
+                                        </td>
+                                        <td class="text-end">@item.PrixUnitaire.ToString("N0") FCFA</td>
+                                        <td class="text-end"><strong>@item.Montant.ToString("N0") FCFA</strong></td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr>
+                                    <td colspan="3" class="text-end">
+                                        <h5 class="mb-0">Montant Total (FCFA):</h5>
+                                    </td>
+                                    <td class="text-end">
+                                        <h4 class="mb-0 text-primary">@Model.MontantTotal.ToString("N0") FCFA</h4>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bouton d'impression -->
+    <div class="row mt-4">
+        <div class="col-12 text-center">
+            <button class="btn btn-outline-primary" onclick="window.print()">
+                <i class="bi bi-printer"></i> Imprimer
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Style d'impression
+        window.addEventListener('beforeprint', function() {
+            document.querySelectorAll('.btn, .navbar, .footer').forEach(el => {
+                el.style.display = 'none';
+            });
+        });
+
+        window.addEventListener('afterprint', function() {
+            document.querySelectorAll('.btn, .navbar, .footer').forEach(el => {
+                el.style.display = '';
+            });
+        });
+    </script>
+}
+
+<style>
+    @@media print {
+        .btn, .navbar, .footer {
+            display: none !important;
+        }
+        .card {
+            border: 1px solid #ddd !important;
+            box-shadow: none !important;
+        }
+    }
+</style>
